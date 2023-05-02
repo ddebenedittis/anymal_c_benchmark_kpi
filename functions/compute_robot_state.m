@@ -81,7 +81,7 @@ end
 t_mid = double(navStructs{2}.Header.Stamp.Sec) + double(navStructs{2}.Header.Stamp.Nsec)*1e-9;
 
 % Find trim indexes
-[i_start, i_end, i_mid] = trim_in_time(stateStructs, 1e-2, t_start, t_end, t_mid);
+[i_start, i_end, i_mid] = trim_in_time(stateStructs, 1e-1, t_start, t_end, t_mid);
 
 % Trim according to selected portion
 if strcmp(up_down,'up')

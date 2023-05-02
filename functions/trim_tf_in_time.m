@@ -9,7 +9,7 @@ for i = 1 : length(struct_in)
     if length(struct_in{i}.Transforms) == 1
         s_now = struct_in{i};
         t_now = double(s_now.Transforms.Header.Stamp.Sec) + double(s_now.Transforms.Header.Stamp.Nsec)*1e-9;
-        if norm(t_now - t_start) < 1.2e-2
+        if norm(t_now - t_start) < 1.5e-1
             i_start = i;
             break;
         end
@@ -21,7 +21,7 @@ for i = 1 : length(struct_in)
     if length(struct_in{i}.Transforms) == 1
         s_now = struct_in{i};
         t_now = double(s_now.Transforms.Header.Stamp.Sec) + double(s_now.Transforms.Header.Stamp.Nsec)*1e-9;
-        if norm(t_now - t_end) < 1.2e-2
+        if norm(t_now - t_end) < 1.5e-1
             i_end = i;
             break;
         end
