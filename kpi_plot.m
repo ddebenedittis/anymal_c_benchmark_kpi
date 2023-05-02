@@ -1,41 +1,22 @@
+%% Initialization
+
 clear
 close all
 clc
 
 load('kpi_data.mat')
 
-experiments_data.Controller = categorical(experiments_data.Controller);
+%% Create the folders
 
+fn = fieldnames(experiments_data.kpi);
 
-%% All Plots Ammassed Together
+for i = 1:length(fn)
+    fni = fn{i};
 
-% figure()
-% 
-% n = length(bag_files);
-% CoT_1 = zeros([n,1]);
-% Slippage = zeros([n,1]);
-% Dev_y = zeros([n,1]);
-% 
-% for i = 1:n
-%     CoT_1(i) = kpi{i}.CoT_1;
-%     Slippage(i) = kpi{i}.Slippage;
-%     Dev_y(i) = kpi{i}.Dev_y;
-% end
-% 
-% subplot(3,1,1)
-% plot(CoT_1, '-o')
-% title('Cost Of transport')
-% 
-% subplot(3,1,2)
-% plot(Slippage, '-o')
-% title('Slippage')
-% 
-% subplot(3,1,3)
-% plot(Dev_y, '-o')
-% title('Deviation')
+    [~, ~] = mkdir("plots/" + string(fni));
+end
 
-
-%% 
+%% Save all the plots
 
 plotComparingEnvironments(experiments_data, "stepbystep", "trekker")
 plotComparingEnvironments(experiments_data, "4in1", "trekker")
@@ -43,10 +24,12 @@ plotComparingEnvironments(experiments_data, "4in1", "dynamic_gaits")
 
 plotComparingControllers(experiments_data)
 
-
 %% Functions
 
 function plotComparingEnvironments(experiments_data, testbench_name, controller_name)
+    % Filter the experiments_data to select only one the given testbench
+    % and controller data.
+
     testbench = categorical(testbench_name);
     controller = categorical(controller_name);
     
@@ -57,6 +40,7 @@ function plotComparingEnvironments(experiments_data, testbench_name, controller_
     
     experiments_data_filtered.Environment = removecats(experiments_data_filtered.Environment);
     experiments_data_filtered.slope = removecats(experiments_data_filtered.slope);
+
     
     environments = categories(experiments_data_filtered.Environment);
     slopes = categories(experiments_data_filtered.slope);
@@ -65,100 +49,146 @@ function plotComparingEnvironments(experiments_data, testbench_name, controller_
     n_env = length(environments);
     n_slo = length(slopes);
     n_spe = length(speeds);
+
+    fud = fieldnames(experiments_data_filtered.kpi);
+    n_fud = length(fud);
+
+    % Iterate over the full, up, and down data.
+    for i_fud = 1:n_fud
+
+        kpi_mean = repmat(experiments_data_filtered.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
+        kpi_std = repmat(experiments_data_filtered.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
     
-    kpi_mean = repmat(experiments_data_filtered.kpi(1), n_slo, n_env * n_spe);
-    kpi_std = repmat(experiments_data_filtered.kpi(1), n_slo, n_env * n_spe);
+        fn = fieldnames(experiments_data_filtered.kpi(1).(fud{i_fud}));
+        n_fields = length(fn);
     
-    fn = fieldnames(experiments_data_filtered.kpi);
-    n_fields = length(fn);
-    
-    for i_con = 1:n_env
-        for i_slo = 1:n_slo
-            for i_spe = 1:n_spe
-                idx = experiments_data_filtered.Environment == environments(i_con) ...
-                    & experiments_data_filtered.slope == slopes(i_slo) ...
-                    & experiments_data_filtered.Speed == speeds(i_spe);
-                
-                data = experiments_data_filtered.kpi(idx);
-    
-                for i_field = 1:n_fields
-                    kpi_mean(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = mean(vertcat(data.(fn{i_field})));
-                    kpi_std(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = std(vertcat(data.(fn{i_field})));
+        % Extract the data from the table and convert it to an array for
+        % easier plotting.
+        for i_env = 1:n_env
+            for i_slo = 1:n_slo
+                for i_spe = 1:n_spe
+                    idx = experiments_data_filtered.Environment == environments(i_env) ...
+                        & experiments_data_filtered.slope == slopes(i_slo) ...
+                        & experiments_data_filtered.Speed == speeds(i_spe);
+                    
+                    data = vertcat(experiments_data_filtered.kpi(idx).(fud{i_fud}));
+        
+                    for i_field = 1:n_fields
+                        if ~isempty(data)
+                            kpi_mean(i_slo, i_env + n_env*(i_spe - 1)).(fn{i_field}) = mean(vertcat(data.(fn{i_field})));
+                            kpi_std(i_slo, i_env + n_env*(i_spe - 1)).(fn{i_field}) = std(vertcat(data.(fn{i_field})));
+                        else
+                            kpi_mean(i_slo, i_env + n_env*(i_spe - 1)).(fn{i_field}) = NaN;
+                            kpi_std(i_slo, i_env + n_env*(i_spe - 1)).(fn{i_field}) = NaN;
+                        end
+                    end
                 end
             end
         end
-    end
     
-    fig = figure('Position', get(0, 'Screensize'));
-    hold on
-    subplot(3,1,1)
-    hold on
-    subplot(3,1,2)
-    hold on
-    subplot(3,1,3)
-    hold on
-    
-    colors = colororder;
-    linestyles = ["-", "--", ":"];
-    
-    x_axs = double(string(slopes));
-    
-    line_handles = {};
-    
-    for i_con = 1:n_env
-        for i_spe = 1:n_spe
-            color = colors(i_con,:);
-            linestyle = linestyles(i_spe);
-    
-            subplot(3,1,1)
-            [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_env*(i_spe - 1)).CoT_1), vertcat(kpi_std(:,i_con + n_env*(i_spe - 1)).CoT_1));
-            line_handles{i_con, i_spe} = errorbar(x, ...
-                y, ...
-                err, ...
-                "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                "DisplayName", string(environments(i_con)) + " " + string(speeds(i_spe)) ...
-            );
-            title("Cost of Transport")
-            xlabel("Inclination [deg]")
-            ylabel("CoT_1")
-            lgd = legend;
-            ylim([0, inf]) % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
-    
-            subplot(3,1,2)
-            [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_env*(i_spe - 1)).Dev_y), vertcat(kpi_std(:,i_con + n_env*(i_spe - 1)).Dev_y));
-            line_handles{i_con, i_spe} = errorbar(x, ...
-                y, ...
-                err, ...
-                "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                "DisplayName", string(environments(i_con)) + " " + string(speeds(i_spe)) ...
-            );
-            title("Lateral Deviation")
-            xlabel("Inclination [deg]")
-            ylabel("Dev_y")
-            lgd = legend;
-            ylim([0, inf]) % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
-    
-            subplot(3,1,3)
-            [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_env*(i_spe - 1)).Slippage), vertcat(kpi_std(:,i_con + n_env*(i_spe - 1)).Slippage));
-            line_handles{i_con, i_spe} = errorbar(x, ...
-                y, ...
-                err, ...
-                "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                "DisplayName", string(environments(i_con)) + " " + string(speeds(i_spe)) ...
-            );
-            title("Slippage")
-            xlabel("Inclination [deg]")
-            ylabel("Slippage")
-            lgd = legend;
-            ylim([0, inf]) % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
+        fig = figure('Position', get(0, 'Screensize'), 'visible','off');
+        hold on
+        subplot(2,2,1)
+        hold on
+        subplot(2,2,2)
+        hold on
+        subplot(2,2,3)
+        hold on
+        subplot(2,2,4)
+        hold on
+        
+        colors = colororder;
+        linestyles = ["-", "--", ":"];
+        
+        x_axs = double(string(slopes));
+        
+        line_handles = {};
+        
+        for i_env = 1:n_env
+            for i_spe = 1:n_spe
+                color = colors(i_env,:);
+                linestyle = linestyles(i_spe);
+        
+                ax(1) = subplot(2,2,1);
+                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_env + n_env*(i_spe - 1)).CoT), vertcat(kpi_std(:,i_env + n_env*(i_spe - 1)).CoT));
+                line_handles{i_env, i_spe} = errorbar(x, ...
+                    y, ...
+                    err, ...
+                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+                    "DisplayName", string(environments(i_env)) + " " + string(speeds(i_spe)) ...
+                );
+                title("Cost of Transport (Power Usage)")
+                xlabel("Inclination [deg]")
+                ylabel("CoT")
+                lgd = legend;
+
+                ax(2) = subplot(2,2,2);
+                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_env + n_env*(i_spe - 1)).CoT_1), vertcat(kpi_std(:,i_env + n_env*(i_spe - 1)).CoT_1));
+                line_handles{i_env, i_spe} = errorbar(x, ...
+                    y, ...
+                    err, ...
+                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+                    "DisplayName", string(environments(i_env)) + " " + string(speeds(i_spe)) ...
+                );
+                title("Cost of Transport (Mechanical Energy)")
+                xlabel("Inclination [deg]")
+                ylabel("CoT_1")
+                lgd = legend;
+        
+                ax(3) = subplot(2,2,3);
+                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_env + n_env*(i_spe - 1)).Dev_y), vertcat(kpi_std(:,i_env + n_env*(i_spe - 1)).Dev_y));
+                line_handles{i_env, i_spe} = errorbar(x, ...
+                    y, ...
+                    err, ...
+                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+                    "DisplayName", string(environments(i_env)) + " " + string(speeds(i_spe)) ...
+                );
+                title("Lateral Deviation")
+                xlabel("Inclination [deg]")
+                ylabel("Dev_y")
+                lgd = legend;
+        
+                ax(4) = subplot(2,2,4);
+                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_env + n_env*(i_spe - 1)).Slippage), vertcat(kpi_std(:,i_env + n_env*(i_spe - 1)).Slippage));
+                line_handles{i_env, i_spe} = errorbar(x, ...
+                    y, ...
+                    err, ...
+                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+                    "DisplayName", string(environments(i_env)) + " " + string(speeds(i_spe)) ...
+                );
+                title("Slippage")
+                xlabel("Inclination [deg]")
+                ylabel("Slippage")
+                lgd = legend;
+            end
         end
-    end
+
+        for i = 1:4
+            if ax(i).YLim(1) >= 0
+                ax(i).YLim(1) = 0; % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
+            end
+        end
+        
+        figure_title = testbench_name + " - " + controller_name;
     
-    figure_title = testbench_name + " - " + controller_name;
+        sgtitle(figure_title)
+    
+        % set(fig, 'visible', 'on');
+        % set all units inside figure to normalized so that everything is scaling accordingly
+        set(findall(fig,'Units','pixels'),'Units','normalized');
+        % set figure units to pixels & adjust figure size
+        fig.Units = 'pixels';
+        fig.OuterPosition = [0 0 1366 768];
+        % define resolution figure to be saved in dpi
+        res = 420;
+        % recalculate figure size to be saved
+        set(fig,'PaperPositionMode','manual')
+        fig.PaperUnits = 'inches';
+        fig.PaperPosition = [0 0 1366 768]/res;
+        exportgraphics(fig, "plots/" + string(fud{i_fud}) + "/" + figure_title + ".pdf", 'ContentType', 'vector');
 
-    sgtitle(figure_title)
-
-    exportgraphics(fig, "plots/" + figure_title + ".pdf", 'ContentType', 'vector');
+        close(fig)
+    end
 end
 
 
@@ -195,100 +225,143 @@ function plotComparingControllers(experiments_data)
         n_slo = length(slopes);
         n_spe = length(speeds);
         n_con = length(controllers);
-    
-        kpi_mean = repmat(experiments_data_filtered_2.kpi(1), n_slo, n_con * n_spe);
-        kpi_std = repmat(experiments_data_filtered_2.kpi(1), n_slo, n_con * n_spe);
+
+        fud = fieldnames(experiments_data_filtered_2.kpi);
+        n_fud = length(fud);
+
+        for i_fud = 1:n_fud
+
+            kpi_mean = repmat(experiments_data_filtered_2.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
+            kpi_std = repmat(experiments_data_filtered_2.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
         
-        fn = fieldnames(experiments_data_filtered_2.kpi);
-        n_fields = length(fn);
-    
-        for i_con = 1:n_con
-            for i_slo = 1:n_slo
-                for i_spe = 1:n_spe
-                    idx = experiments_data_filtered_2.Controller == controllers(i_con) ...
-                        & experiments_data_filtered_2.slope == slopes(i_slo) ...
-                        & experiments_data_filtered_2.Speed == speeds(i_spe);
-                    
-                    data = experiments_data_filtered_2.kpi(idx);
+            fn = fieldnames(experiments_data_filtered_2.kpi(1).(fud{i_fud}));
+            n_fields = length(fn);
         
-                    for i_field = 1:n_fields
-                        kpi_mean(i_slo, i_con + n_con*(i_spe - 1)).(fn{i_field}) = mean(vertcat(data.(fn{i_field})));
-                        kpi_std(i_slo, i_con + n_con*(i_spe - 1)).(fn{i_field}) = std(vertcat(data.(fn{i_field})));
+            for i_con = 1:n_con
+                for i_slo = 1:n_slo
+                    for i_spe = 1:n_spe
+                        idx = experiments_data_filtered_2.Controller == controllers(i_con) ...
+                            & experiments_data_filtered_2.slope == slopes(i_slo) ...
+                            & experiments_data_filtered_2.Speed == speeds(i_spe);
+                        
+                        data = vertcat(experiments_data_filtered_2.kpi(idx).(fud{i_fud}));
+            
+                        for i_field = 1:n_fields
+                            if length(data) ~= 0
+                                kpi_mean(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = mean(vertcat(data.(fn{i_field})));
+                                kpi_std(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = std(vertcat(data.(fn{i_field})));
+                            else
+                                kpi_mean(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = NaN;
+                                kpi_std(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = NaN;
+                            end
+                        end
                     end
                 end
             end
-        end
-        
-        fig = figure('Position', get(0, 'Screensize'));
-        hold on
-        subplot(3,1,1)
-        hold on
-        subplot(3,1,2)
-        hold on
-        subplot(3,1,3)
-        hold on
-        
-        colors = colororder;
-        linestyles = ["-", "--", ":"];
-        
-        x_axs = double(string(slopes));
-        
-        line_handles = {};
-        
-        for i_con = 1:n_con
-            for i_spe = 1:n_spe
-                color = colors(i_con,:);
-                linestyle = linestyles(i_spe);
-        
-                subplot(3,1,1)
-                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).CoT_1), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).CoT_1));
-                line_handles{i_con, i_spe} = errorbar(x, ...
-                    y, ...
-                    err, ...
-                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                    "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
-                );
-                title("Cost of Transport")
-                xlabel("Inclination [deg]")
-                ylabel("CoT_1")
-                lgd = legend;
-                ylim([0, inf]) % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
-        
-                subplot(3,1,2)
-                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).Dev_y), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).Dev_y));
-                line_handles{i_con, i_spe} = errorbar(x, ...
-                    y, ...
-                    err, ...
-                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                    "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
-                );
-                title("Lateral Deviation")
-                xlabel("Inclination [deg]")
-                ylabel("Dev_y")
-                lgd = legend;
-                ylim([0, inf]) % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
-        
-                subplot(3,1,3)
-                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).Slippage), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).Slippage));
-                line_handles{i_con, i_spe} = errorbar(x, ...
-                    y, ...
-                    err, ...
-                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                    "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
-                );
-                title("Slippage")
-                xlabel("Inclination [deg]")
-                ylabel("Slippage")
-                lgd = legend;
-                ylim([0, inf]) % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
+            
+            fig = figure('Position', get(0, 'Screensize'), 'visible','off');
+            hold on
+            subplot(2,2,1)
+            hold on
+            subplot(2,2,2)
+            hold on
+            subplot(2,2,3)
+            hold on
+            subplot(2,2,4)
+            hold on
+            
+            colors = colororder;
+            linestyles = ["-", "--", ":"];
+            
+            x_axs = double(string(slopes));
+            
+            line_handles = {};
+            
+            for i_con = 1:n_con
+                for i_spe = 1:n_spe
+                    color = colors(i_con,:);
+                    linestyle = linestyles(i_spe);
+            
+                    ax(1) = subplot(2,2,1);
+                    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).CoT), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).CoT));
+                    line_handles{i_con, i_spe} = errorbar(x, ...
+                        y, ...
+                        err, ...
+                        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+                        "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
+                    );
+                    title("Cost of Transport (Energy Usage)")
+                    xlabel("Inclination [deg]")
+                    ylabel("CoT_1")
+                    lgd = legend;
+
+                    ax(2) = subplot(2,2,2);
+                    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).CoT_1), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).CoT_1));
+                    line_handles{i_con, i_spe} = errorbar(x, ...
+                        y, ...
+                        err, ...
+                        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+                        "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
+                    );
+                    title("Cost of Transport (Mechanical Energy)")
+                    xlabel("Inclination [deg]")
+                    ylabel("CoT_1")
+                    lgd = legend;
+            
+                    ax(3) = subplot(2,2,3);
+                    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).Dev_y), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).Dev_y));
+                    line_handles{i_con, i_spe} = errorbar(x, ...
+                        y, ...
+                        err, ...
+                        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+                        "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
+                    );
+                    title("Lateral Deviation")
+                    xlabel("Inclination [deg]")
+                    ylabel("Dev_y")
+                    lgd = legend;
+            
+                    ax(4) = subplot(2,2,4);
+                    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).Slippage), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).Slippage));
+                    line_handles{i_con, i_spe} = errorbar(x, ...
+                        y, ...
+                        err, ...
+                        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+                        "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
+                    );
+                    title("Slippage")
+                    xlabel("Inclination [deg]")
+                    ylabel("Slippage")
+                    lgd = legend;
+                end
             end
+
+            for i = 1:4
+                if ax(i).YLim(1) >= 0
+                    ax(i).YLim(1) = 0; % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
+                end
+            end
+    
+            figure_title = "trekker vs dyn gaits - " + string(environments(i_env));
+            
+            sgtitle(figure_title)
+    
+            % set(fig, 'visible', 'on');
+            % set all units inside figure to normalized so that everything is scaling accordingly
+            set(findall(fig,'Units','pixels'),'Units','normalized');
+            % set figure units to pixels & adjust figure size
+            fig.Units = 'pixels';
+            fig.OuterPosition = [0 0 1366 768];
+            % define resolution figure to be saved in dpi
+            res = 420;
+            % recalculate figure size to be saved
+            set(fig,'PaperPositionMode','manual')
+            fig.PaperUnits = 'inches';
+            fig.PaperPosition = [0 0 1366 768]/res;
+            exportgraphics(fig, "plots/" + string(fud{i_fud}) + "/" + figure_title + ".pdf", 'ContentType', 'vector');
+
+            close(fig)
         end
-
-        figure_title = "trekker vs dyn gaits - " + string(environments(i_env));
-        
-        sgtitle(figure_title)
-
-        exportgraphics(fig, "plots/" + figure_title + ".pdf", 'ContentType', 'vector');
     end
 end
 
