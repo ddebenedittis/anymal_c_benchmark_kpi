@@ -187,8 +187,8 @@ function plotComparingControllers(experiments_data)
 
             %% Compute the KPIs mean and std
 
-            kpi_mean = repmat(experiments_data_filtered_2.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
-            kpi_std = repmat(experiments_data_filtered_2.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
+            kpi_mean = repmat(experiments_data_filtered_2.kpi(1).(fud{i_fud}), n_slo, n_con * n_spe);
+            kpi_std = repmat(experiments_data_filtered_2.kpi(1).(fud{i_fud}), n_slo, n_con * n_spe);
         
             fn = fieldnames(experiments_data_filtered_2.kpi(1).(fud{i_fud}));
             n_fields = length(fn);
@@ -204,11 +204,11 @@ function plotComparingControllers(experiments_data)
             
                         for i_field = 1:n_fields
                             if length(data) ~= 0
-                                kpi_mean(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = mean(vertcat(data.(fn{i_field})));
-                                kpi_std(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = std(vertcat(data.(fn{i_field})));
+                                kpi_mean(i_slo, i_con + n_con*(i_spe - 1)).(fn{i_field}) = mean(vertcat(data.(fn{i_field})));
+                                kpi_std(i_slo, i_con + n_con*(i_spe - 1)).(fn{i_field}) = std(vertcat(data.(fn{i_field})));
                             else
-                                kpi_mean(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = NaN;
-                                kpi_std(i_slo, i_con + n_env*(i_spe - 1)).(fn{i_field}) = NaN;
+                                kpi_mean(i_slo, i_con + n_con*(i_spe - 1)).(fn{i_field}) = NaN;
+                                kpi_std(i_slo, i_con + n_con*(i_spe - 1)).(fn{i_field}) = NaN;
                             end
                         end
                     end
