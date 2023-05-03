@@ -101,65 +101,10 @@ function plotComparingEnvironments(experiments_data, testbench_name, controller_
         linestyles = ["-", "--", ":"];
         
         x_axs = double(string(slopes));
-        
-        line_handles = {};
-        
+                
         for i_env = 1:n_env
             for i_spe = 1:n_spe
-                color = colors(i_env,:);
-                linestyle = linestyles(i_spe);
-        
-                ax(1) = subplot(2,2,1);
-                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_env + n_env*(i_spe - 1)).CoT), vertcat(kpi_std(:,i_env + n_env*(i_spe - 1)).CoT));
-                line_handles{i_env, i_spe} = errorbar(x, ...
-                    y, ...
-                    err, ...
-                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                    "DisplayName", string(environments(i_env)) + " " + string(speeds(i_spe)) ...
-                );
-                title("Cost of Transport (Power Usage)")
-                xlabel("Inclination [deg]")
-                ylabel("CoT")
-                lgd = legend;
-
-                ax(2) = subplot(2,2,2);
-                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_env + n_env*(i_spe - 1)).CoT_1), vertcat(kpi_std(:,i_env + n_env*(i_spe - 1)).CoT_1));
-                line_handles{i_env, i_spe} = errorbar(x, ...
-                    y, ...
-                    err, ...
-                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                    "DisplayName", string(environments(i_env)) + " " + string(speeds(i_spe)) ...
-                );
-                title("Cost of Transport (Mechanical Energy)")
-                xlabel("Inclination [deg]")
-                ylabel("CoT_1")
-                lgd = legend;
-        
-                ax(3) = subplot(2,2,3);
-                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_env + n_env*(i_spe - 1)).Dev_y), vertcat(kpi_std(:,i_env + n_env*(i_spe - 1)).Dev_y));
-                line_handles{i_env, i_spe} = errorbar(x, ...
-                    y, ...
-                    err, ...
-                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                    "DisplayName", string(environments(i_env)) + " " + string(speeds(i_spe)) ...
-                );
-                title("Lateral Deviation")
-                xlabel("Inclination [deg]")
-                ylabel("Dev_y")
-                lgd = legend;
-        
-                ax(4) = subplot(2,2,4);
-                [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_env + n_env*(i_spe - 1)).Slippage), vertcat(kpi_std(:,i_env + n_env*(i_spe - 1)).Slippage));
-                line_handles{i_env, i_spe} = errorbar(x, ...
-                    y, ...
-                    err, ...
-                    "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                    "DisplayName", string(environments(i_env)) + " " + string(speeds(i_spe)) ...
-                );
-                title("Slippage")
-                xlabel("Inclination [deg]")
-                ylabel("Slippage")
-                lgd = legend;
+                ax = plot_kpi(x_axs, kpi_mean, kpi_std, environments, i_env, n_env, speeds, i_spe, colors, linestyles);
             end
         end
 
@@ -274,65 +219,10 @@ function plotComparingControllers(experiments_data)
             linestyles = ["-", "--", ":"];
             
             x_axs = double(string(slopes));
-            
-            line_handles = {};
-            
+                        
             for i_con = 1:n_con
                 for i_spe = 1:n_spe
-                    color = colors(i_con,:);
-                    linestyle = linestyles(i_spe);
-            
-                    ax(1) = subplot(2,2,1);
-                    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).CoT), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).CoT));
-                    line_handles{i_con, i_spe} = errorbar(x, ...
-                        y, ...
-                        err, ...
-                        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                        "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
-                    );
-                    title("Cost of Transport (Energy Usage)")
-                    xlabel("Inclination [deg]")
-                    ylabel("CoT_1")
-                    lgd = legend;
-
-                    ax(2) = subplot(2,2,2);
-                    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).CoT_1), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).CoT_1));
-                    line_handles{i_con, i_spe} = errorbar(x, ...
-                        y, ...
-                        err, ...
-                        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                        "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
-                    );
-                    title("Cost of Transport (Mechanical Energy)")
-                    xlabel("Inclination [deg]")
-                    ylabel("CoT_1")
-                    lgd = legend;
-            
-                    ax(3) = subplot(2,2,3);
-                    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).Dev_y), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).Dev_y));
-                    line_handles{i_con, i_spe} = errorbar(x, ...
-                        y, ...
-                        err, ...
-                        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                        "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
-                    );
-                    title("Lateral Deviation")
-                    xlabel("Inclination [deg]")
-                    ylabel("Dev_y")
-                    lgd = legend;
-            
-                    ax(4) = subplot(2,2,4);
-                    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_con + n_con*(i_spe - 1)).Slippage), vertcat(kpi_std(:,i_con + n_con*(i_spe - 1)).Slippage));
-                    line_handles{i_con, i_spe} = errorbar(x, ...
-                        y, ...
-                        err, ...
-                        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
-                        "DisplayName", string(controllers(i_con)) + " " + string(speeds(i_spe)) ...
-                    );
-                    title("Slippage")
-                    xlabel("Inclination [deg]")
-                    ylabel("Slippage")
-                    lgd = legend;
+                    ax = plot_kpi(x_axs, kpi_mean, kpi_std, controllers, i_con, n_con, speeds, i_spe, colors, linestyles);
                 end
             end
 
@@ -363,6 +253,63 @@ function plotComparingControllers(experiments_data)
             close(fig)
         end
     end
+end
+
+function ax = plot_kpi(x_axs, kpi_mean, kpi_std, name_1, i_1, n_1, speeds, i_spe, colors, linestyles)
+    color = colors(i_1,:);
+    linestyle = linestyles(i_spe);
+
+    ax(1) = subplot(2,2,1);
+    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_1 + n_1*(i_spe - 1)).CoT), vertcat(kpi_std(:,i_1 + n_1*(i_spe - 1)).CoT));
+    errorbar(x, ...
+        y, ...
+        err, ...
+        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+        "DisplayName", string(name_1(i_1)) + " " + string(speeds(i_spe)) ...
+    );
+    title("Cost of Transport (Energy Usage)")
+    xlabel("Inclination [deg]")
+    ylabel("CoT_1")
+    legend('Location', 'Best')
+
+    ax(2) = subplot(2,2,3);
+    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_1 + n_1*(i_spe - 1)).CoT_1), vertcat(kpi_std(:,i_1 + n_1*(i_spe - 1)).CoT_1));
+    errorbar(x, ...
+        y, ...
+        err, ...
+        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+        "DisplayName", string(name_1(i_1)) + " " + string(speeds(i_spe)) ...
+    );
+    title("Cost of Transport (Mechanical Energy)")
+    xlabel("Inclination [deg]")
+    ylabel("CoT_1")
+    legend('Location', 'Best')
+
+    ax(3) = subplot(2,2,2);
+    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_1 + n_1*(i_spe - 1)).Dev_y), vertcat(kpi_std(:,i_1 + n_1*(i_spe - 1)).Dev_y));
+    errorbar(x, ...
+        y, ...
+        err, ...
+        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+        "DisplayName", string(name_1(i_1)) + " " + string(speeds(i_spe)) ...
+    );
+    title("Lateral Deviation")
+    xlabel("Inclination [deg]")
+    ylabel("Dev_y")
+    legend('Location', 'Best')
+
+    ax(4) = subplot(2,2,4);
+    [x, y, err] = removeNaN(x_axs, vertcat(kpi_mean(:,i_1 + n_1*(i_spe - 1)).Slippage), vertcat(kpi_std(:,i_1 + n_1*(i_spe - 1)).Slippage));
+    errorbar(x, ...
+        y, ...
+        err, ...
+        "Color", color, "Marker", "none", "LineStyle", linestyle, ...
+        "DisplayName", string(name_1(i_1)) + " " + string(speeds(i_spe)) ...
+    );
+    title("Slippage")
+    xlabel("Inclination [deg]")
+    ylabel("Slippage")
+    legend('Location', 'Best')
 end
 
 function [x, y, err] = removeNaN(x, y, err)
