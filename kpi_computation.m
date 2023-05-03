@@ -70,6 +70,8 @@ kpi = {};
 
 fprintf("The total number of files is %d.\n", n_bag_files)
 
+% Remove these lines and substitute the parfor with a simple for cycle to
+% avoid using the Parallel Computing Toolbox.
 % Delete preexisting parpools and create a new one.
 poolobj = gcp('nocreate');
 delete(poolobj);
