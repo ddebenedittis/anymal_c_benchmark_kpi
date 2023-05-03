@@ -24,7 +24,10 @@ plotComparingEnvironments(experiments_data, "4in1", "dynamic_gaits")
 
 plotComparingControllers(experiments_data)
 
-%% Functions
+%% Elaborate data
+
+% Generate two matrices (kpi_mean and kpi_std) that are used to plot the
+% KPIs and plot them.
 
 function plotComparingEnvironments(experiments_data, testbench_name, controller_name)
     % Filter the experiments_data to select only one the given testbench
@@ -41,6 +44,7 @@ function plotComparingEnvironments(experiments_data, testbench_name, controller_
     experiments_data_filtered.Environment = removecats(experiments_data_filtered.Environment);
     experiments_data_filtered.slope = removecats(experiments_data_filtered.slope);
 
+    %% Extract some quantities
     
     environments = categories(experiments_data_filtered.Environment);
     slopes = categories(experiments_data_filtered.slope);
@@ -55,6 +59,8 @@ function plotComparingEnvironments(experiments_data, testbench_name, controller_
 
     % Iterate over the full, up, and down data.
     for i_fud = 1:n_fud
+
+        %% Compute the KPIs mean and std
 
         kpi_mean = repmat(experiments_data_filtered.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
         kpi_std = repmat(experiments_data_filtered.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
@@ -85,6 +91,8 @@ function plotComparingEnvironments(experiments_data, testbench_name, controller_
                 end
             end
         end
+
+        %% Plot the KPIs
     
         fig = figure('Position', get(0, 'Screensize'), 'visible','off');
         hold on
@@ -152,7 +160,8 @@ function plotComparingControllers(experiments_data)
     n_env = length(environments);
     
     for i_env = 1:2
-    
+        %% Extract some quantities
+
         environment = environments(i_env);
     
         experiments_data_filtered_2 = experiments_data_filtered;
@@ -175,6 +184,8 @@ function plotComparingControllers(experiments_data)
         n_fud = length(fud);
 
         for i_fud = 1:n_fud
+
+            %% Compute the KPIs mean and std
 
             kpi_mean = repmat(experiments_data_filtered_2.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
             kpi_std = repmat(experiments_data_filtered_2.kpi(1).(fud{i_fud}), n_slo, n_env * n_spe);
@@ -203,6 +214,8 @@ function plotComparingControllers(experiments_data)
                     end
                 end
             end
+
+            %% Plot the KPIs
             
             fig = figure('Position', get(0, 'Screensize'), 'visible','off');
             hold on
@@ -254,6 +267,10 @@ function plotComparingControllers(experiments_data)
         end
     end
 end
+
+%% Function that plots the KPIs
+
+% Change here to change the plots.
 
 function ax = plot_kpi(x_axs, kpi_mean, kpi_std, name_1, i_1, n_1, speeds, i_spe, colors, linestyles)
     color = colors(i_1,:);
@@ -311,6 +328,8 @@ function ax = plot_kpi(x_axs, kpi_mean, kpi_std, name_1, i_1, n_1, speeds, i_spe
     ylabel("Slippage")
     legend('Location', 'Best')
 end
+
+%%
 
 function [x, y, err] = removeNaN(x, y, err)
     % x(:) to convert to column vector
