@@ -173,7 +173,7 @@ for i = 1:n_bag_files
         % Save the kpi
         kpi{i} = kpi_local;
 
-        duration{i} = t_end - t_start;
+        duration{i} = navStructs{end}.Header.Stamp.Sec - navStructs{1}.Header.Stamp.Sec + (navStructs{end}.Header.Stamp.Nsec - navStructs{1}.Header.Stamp.Nsec) / 10^9;
         battery_usage{i} = energy_consumption;
         perc_state{i} = compute_perc_state(stateStructs);
         terrain_inclinations{i} = rad2deg(compute_terrain_inclination(stateStructs));
