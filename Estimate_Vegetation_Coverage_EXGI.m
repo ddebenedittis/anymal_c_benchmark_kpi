@@ -1,6 +1,6 @@
 %% Instructions
 
-
+% Put the images in the img folder and run the script.
 
 %% Initialization
 
@@ -39,6 +39,9 @@ dim_cluster = 30;
 % max_red = 100;
 % dim_cluster = 8;
 
+color_veg = [70, 158, 53];
+color_not = [101, 67, 33];
+
 %% Process photos
 
 extensions = ["jpg", "JPG", "png", "PNG"];
@@ -46,9 +49,6 @@ extensions = ["jpg", "JPG", "png", "PNG"];
 if ~exist('results', 'dir')
     mkdir('results')
 end
-
-color_veg = [70, 158, 53];
-color_not = [101, 67, 33];
 
 for extension = extensions
     all_images = dir(fullfile('./img/**/*.' + extension));
