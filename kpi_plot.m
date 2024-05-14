@@ -135,6 +135,8 @@ function plotComparingEnvironments(experiments_data, testbench_name, controller_
         end
 
         for i = 1:4
+            ax(i).XLim(1) = ax(i).XLim(1) - (ax(i).XLim(2) - ax(i).XLim(1))*0.01;
+            xticks(ax(i), x_axs)
             if ax(i).YLim(1) >= 0
                 ax(i).YLim(1) = 0; % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
             end
@@ -221,7 +223,7 @@ function plotComparingControllers(experiments_data)
                         data = vertcat(experiments_data_filtered_2.kpi(idx).(fud{i_fud}));
             
                         for i_field = 1:n_fields
-                            if length(data) ~= 0
+                            if ~isempty(data)
                                 kpi_mean(i_slo, i_con + n_con*(i_spe - 1)).(fn{i_field}) = mean(vertcat(data.(fn{i_field})));
                                 kpi_std(i_slo, i_con + n_con*(i_spe - 1)).(fn{i_field}) = std(vertcat(data.(fn{i_field})));
                             else
@@ -258,6 +260,8 @@ function plotComparingControllers(experiments_data)
             end
 
             for i = 1:4
+                ax(i).XLim(1) = ax(i).XLim(1) - (ax(i).XLim(2) - ax(i).XLim(1))*0.01;
+                xticks(ax(i), x_axs)
                 if ax(i).YLim(1) >= 0
                     ax(i).YLim(1) = 0; % replace the lower y-axis limmit with 0 and keep the higher limit unchanged.
                 end
@@ -352,6 +356,11 @@ function ax = plot_kpi(x_axs, kpi_mean, kpi_std, name_1, i_1, n_1, speeds, i_spe
     xlabel("Inclination [deg]")
     ylabel("Slippage")
     legend('Location', 'Best')
+
+    for i = 1:4
+        ax(i).XLim(1) = ax(i).XLim(1) - (ax(i).XLim(2) - ax(i).XLim(1))*0.01;
+        xticks(ax(i), x)
+    end
 end
 
 
@@ -384,6 +393,9 @@ function plot_cots_vs_trials(experiments_data)
     subplot(2,2,1)
     hold on
     errorbar(vertcat(kpi_mean(:).CoT), vertcat(kpi_std(:).CoT))
+    xticks([1,2,3])
+    ax = gca;
+    ax.XLim(1) = ax.XLim(1) - 0.05*(ax.XLim(2) - ax.XLim(1));
     title("Cost of Transport (Energy Usage)")
     xlabel("Trial")
     ylabel("CoT")
@@ -391,6 +403,9 @@ function plot_cots_vs_trials(experiments_data)
     subplot(2,2,2)
     hold on
     errorbar(vertcat(kpi_mean(:).CoT_1), vertcat(kpi_std(:).CoT_1))
+    xticks([1,2,3])
+    ax = gca;
+    ax.XLim(1) = ax.XLim(1) - 0.05*(ax.XLim(2) - ax.XLim(1));
     title("Cost of Transport (Mechanical Energy)")
     xlabel("Inclination [deg]")
     ylabel("CoT_1")
@@ -398,6 +413,9 @@ function plot_cots_vs_trials(experiments_data)
     subplot(2,2,3)
     hold on
     errorbar(vertcat(kpi_mean(:).Dev_y), vertcat(kpi_std(:).Dev_y))
+    xticks([1,2,3])
+    ax = gca;
+    ax.XLim(1) = ax.XLim(1) - 0.05*(ax.XLim(2) - ax.XLim(1));
     title("Lateral Deviation")
     xlabel("Inclination [deg]")
     ylabel("Dev_y")
@@ -405,6 +423,9 @@ function plot_cots_vs_trials(experiments_data)
     subplot(2,2,4)
     hold on
     errorbar(vertcat(kpi_mean(:).Slippage), vertcat(kpi_std(:).Slippage))
+    xticks([1,2,3])
+    ax = gca;
+    ax.XLim(1) = ax.XLim(1) - 0.05*(ax.XLim(2) - ax.XLim(1));
     title("Slippage")
     xlabel("Inclination [deg]")
     ylabel("Slippage")
