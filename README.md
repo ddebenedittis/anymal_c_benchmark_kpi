@@ -16,4 +16,4 @@ Compute and plot the KPIs obtained from ANYmal C recorded bags during benchmark 
 - Eventually, save the `experiments_data` variable in a `.mat` file to avoid recomputing it.
 
 ### KPI Plot
-- Run `kpi_plot.m`. This script loads the `kpi_data.mat` file, containing (only) the `experiments_data` variable.
+- Run `plotting/kpi_plot.m`. This script loads the `kpi_data.mat` file, containing (only) the `experiments_data` variable.
